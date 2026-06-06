@@ -15,6 +15,7 @@ urlpatterns = [
     path('transactions/<int:pk>/delete/', views.transaction_delete, name='transaction_delete'),
     path('categories/', views.category_list, name='category_list'),
     path('categories/add/', views.category_create, name='category_create'),
+    path('categories/<int:pk>/entries/', views.category_entries, name='category_entries'),
     path('categories/<int:pk>/edit/', views.category_update, name='category_update'),
     path('categories/<int:pk>/delete/', views.category_delete, name='category_delete'),
     path('export/csv/', views.export_transactions_csv, name='export_transactions_csv'),

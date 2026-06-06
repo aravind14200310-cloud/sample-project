@@ -1,0 +1,44 @@
+{% extends 'app/base.html' %}
+{% block title %}{{ category.name }} entries - Expense Tracker{% endblock %}
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3 gap-2">
+    <div>
+        <h2>Saved entries for {{ category.name }}</h2>
+        <p class="text-muted">Previously saved transactions for this category.</p>
+    </div>
+    <a class="btn btn-secondary" href="{% url 'category_list' %}">Back to Categories</a>
+</div>
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Payment</th>
+                    <th>Notes</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.date }} {{ transaction.time|time:'H:i' }}</td>
+                        <td class="text-{% if transaction.transaction_type == 'income' %}success{% else %}danger{% endif %}">${{ transaction.amount }}</td>
+                        <td>{{ transaction.get_transaction_type_display }}</td>
+                        <td>{{ transaction.get_payment_method_display }}</td>
+                        <td>{{ transaction.notes|truncatechars:50 }}</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'transaction_update' transaction.pk %}">Edit</a>
+                            <a class="btn btn-sm btn-outline-danger" href="{% url 'transaction_delete' transaction.pk %}">Delete</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6">No saved entries for this category yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

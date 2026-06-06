@@ -6,7 +6,9 @@
         <h2>Categories</h2>
         <p class="text-muted">Manage expense and income categories.</p>
     </div>
-    <a class="btn btn-primary" href="{% url 'category_create' %}">Add Category</a>
+    <div class="btn-group">
+        <a class="btn btn-primary" href="{% url 'category_create' %}">Add Category</a>
+    </div>
 </div>
 <div class="card shadow-sm">
     <div class="table-responsive">
@@ -22,7 +24,11 @@
             <tbody>
                 {% for category in categories %}
                     <tr>
-                        <td>{{ category.name }}</td>
+                        <td>
+                            <a class="text-decoration-none fw-semibold" href="{% url 'category_entries' category.pk %}">
+                                {{ category.name }}
+                            </a>
+                        </td>
                         <td>{{ category.get_category_type_display }}</td>
                         <td>{{ category.description|truncatechars:50 }}</td>
                         <td class="text-end">

@@ -262,6 +262,19 @@ def category_list(request):
 
 
 @login_required
+def category_entries(request, pk):
+    category = get_object_or_404(
+        Category.objects.filter(Q(user=request.user) | Q(user__isnull=True)),
+        pk=pk
+    )
+    transactions = Transaction.objects.filter(user=request.user, category=category).order_by('-date', '-time')
+    return render(request, 'app/category_entries.html', {
+        'category': category,
+        'transactions': transactions,
+    })
+
+
+@login_required
 def category_create(request):
     if request.method == 'POST':
         form = CategoryForm(request.POST)
