@@ -1,0 +1,178 @@
+{% extends 'app/base.html' %}
+{% block title %}Dashboard - Expense Tracker{% endblock %}
+{% block content %}
+<div class="row gy-3">
+    <div class="col-12">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h2>Dashboard</h2>
+            <div>
+                <a class="btn btn-outline-primary me-2" href="{% url 'transaction_create' %}">Add Transaction</a>
+                <a class="btn btn-outline-secondary" href="{% url 'export_transactions_csv' %}">Export CSV</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6 fade-in">
+        <div class="card p-3 shadow-sm h-100">
+            <div class="card-accent">
+                <div class="metric">
+                    <div class="icon icon-income">$</div>
+                    <div>
+                        <small class="text-muted">Total Income</small>
+                        <div class="h4 mb-0 text-success">${{ income_total }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="mb-0 text-muted">This period income</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6 fade-in">
+        <div class="card p-3 shadow-sm h-100">
+            <div class="card-accent">
+                <div class="metric">
+                    <div class="icon icon-expense">-</div>
+                    <div>
+                        <small class="text-muted">Total Expenses</small>
+                        <div class="h4 mb-0 text-danger">${{ expense_total }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="mb-0 text-muted">All expense transactions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-12 fade-in">
+        <div class="card p-3 shadow-sm h-100">
+            <div class="card-accent">
+                <div class="metric">
+                    <div class="icon icon-balance">B</div>
+                    <div>
+                        <small class="text-muted">Balance</small>
+                        <div class="h4 mb-0">${{ balance }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="mb-0 text-muted">Net funds available</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5>Monthly summary</h5>
+                <div class="row text-center">
+                    <div class="col-6 border-end py-3">
+                        <strong>Income</strong>
+                        <div class="fs-4 text-success">${{ month_income }}</div>
+                    </div>
+                    <div class="col-6 py-3">
+                        <strong>Expenses</strong>
+                        <div class="fs-4 text-danger">${{ month_expense }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5>Spending by category</h5>
+                <ul class="list-group list-group-flush">
+                    {% for row in category_summary %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ row.category__name }}
+                            <span>${{ row.total }}</span>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item">No expense categories recorded yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5>Transaction history</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Payment</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in recent_transactions %}
+                                <tr>
+                                    <td>{{ transaction.date }} {{ transaction.time|time:'H:i' }}</td>
+                                    <td>{{ transaction.category.name }}</td>
+                                    <td>{{ transaction.get_transaction_type_display }}</td>
+                                    <td class="text-{% if transaction.transaction_type == 'income' %}success{% else %}danger{% endif %}">${{ transaction.amount }}</td>
+                                    <td>{{ transaction.get_payment_method_display }}</td>
+                                    <td>{{ transaction.notes|truncatechars:40 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="6">No recent transactions yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5>Income &amp; Expense trends</h5>
+                <canvas id="transactionsChart" height="110"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    const chartLabels = {{ chart_labels|safe }};
+    const incomeData = {{ income_values|safe }};
+    const expenseData = {{ expense_values|safe }};
+    const ctx = document.getElementById('transactionsChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [
+                    {
+                        label: 'Income',
+                        data: incomeData,
+                        borderColor: '#198754',
+                        backgroundColor: 'rgba(25,135,84,0.15)',
+                        tension: 0.25,
+                    },
+                    {
+                        label: 'Expense',
+                        data: expenseData,
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220,53,69,0.15)',
+                        tension: 0.25,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                },
+            },
+        });
+    }
+</script>
+{% endblock %}

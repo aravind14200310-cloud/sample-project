@@ -1,0 +1,31 @@
+{% extends 'app/base.html' %}
+{% block title %}{{ title }} - Expense Tracker{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-xl-8 col-lg-10">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h3 class="card-title mb-3">{{ title }}</h3>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        {% for field in form %}
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        <div class="text-danger small">{{ field.errors|striptags }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">Save category</button>
+                    <a class="btn btn-link mt-3" href="{% url 'category_list' %}">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
