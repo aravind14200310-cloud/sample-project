@@ -10,18 +10,18 @@
 </div>
 <div class="card mb-4 shadow-sm">
     <div class="card-body">
-        <form method="get" class="row gy-3 gx-3 align-items-end">
+        <form id="filterForm" class="row gy-3 gx-3 align-items-end">
             <div class="col-md-4">
                 <label class="form-label">From</label>
-                <input type="date" name="start_date" value="{{ start_date }}" class="form-control" />
+                <input type="date" id="startDate" class="form-control" />
             </div>
             <div class="col-md-4">
                 <label class="form-label">To</label>
-                <input type="date" name="end_date" value="{{ end_date }}" class="form-control" />
+                <input type="date" id="endDate" class="form-control" />
             </div>
             <div class="col-md-4 d-flex gap-2">
-                <button type="submit" class="btn btn-outline-primary w-100">Filter</button>
-                <button type="submit" name="export" value="csv" class="btn btn-outline-secondary w-100">Export</button>
+                <button type="button" id="filterBtn" class="btn btn-outline-primary w-100">Filter</button>
+                <button type="button" id="exportExcelBtn" class="btn btn-outline-secondary w-100">Export</button>
             </div>
         </form>
     </div>
@@ -41,8 +41,8 @@
             </thead>
             <tbody>
                 {% for transaction in transactions %}
-                    <tr>
-                        <td>{{ transaction.date }} {{ transaction.time|time:'H:i' }}</td>
+                    <tr class="entry-row">
+                        <td data-date="{{ transaction.date|date:'Y-m-d' }}">{{ transaction.date }} {{ transaction.time|time:'H:i' }}</td>
                         <td class="text-{% if transaction.transaction_type == 'income' %}success{% else %}danger{% endif %}">₹{{ transaction.amount }}</td>
                         <td>{{ transaction.get_transaction_type_display }}</td>
                         <td>{{ transaction.get_payment_method_display }}</td>
@@ -59,4 +59,54 @@
         </table>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+    // 1. Instant Client-Side Filter
+    document.getElementById('filterBtn').addEventListener('click', function() {
+        let startInput = document.getElementById('startDate').value;
+        let endInput = document.getElementById('endDate').value;
+        
+        let startDate = startInput ? new Date(startInput) : null;
+        let endDate = endInput ? new Date(endInput) : null;
+        if (startDate) startDate.setHours(0,0,0,0);
+        if (endDate) endDate.setHours(23,59,59,999);
+        
+        document.querySelectorAll('.entry-row').forEach(row => {
+            let dateStr = row.querySelector('td[data-date]').getAttribute('data-date');
+            if (!dateStr) return;
+            
+            let rowDate = new Date(dateStr);
+            let show = true;
+            
+            if (startDate && rowDate < startDate) show = false;
+            if (endDate && rowDate > endDate) show = false;
+            
+            row.style.display = show ? '' : 'none';
+        });
+    });
+
+    // 2. Export Excel (Only visible rows)
+    document.getElementById('exportExcelBtn').addEventListener('click', function() {
+        // Clone the table so we don't modify the visible interface
+        let table = document.querySelector('.table').cloneNode(true);
+        
+        // Remove hidden rows and the "Actions" column
+        table.querySelectorAll('tr').forEach(row => {
+            if (row.style.display === 'none') {
+                row.parentNode.removeChild(row);
+                return;
+            }
+            if (row.children.length > 1) {
+                row.removeChild(row.lastElementChild);
+            }
+        });
+        
+        // Generate and download the Excel file
+        let wb = XLSX.utils.table_to_book(table, {sheet: "Entries"});
+        XLSX.writeFile(wb, "{{ category.name|default:'Category' }}_Entries.xlsx");
+    });
+</script>
 {% endblock %}

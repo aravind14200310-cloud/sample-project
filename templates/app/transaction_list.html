@@ -35,8 +35,8 @@
                 <input type="date" name="end_date" value="{{ end_date }}" class="form-control" />
             </div>
             <div class="col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-outline-primary w-100">Filter</button>
-                <button type="submit" name="export" value="csv" class="btn btn-outline-secondary w-100">Export</button>
+                <button type="submit" name="filter" value="true" class="btn btn-outline-primary w-100">Filter</button>
+                <button type="button" id="exportExcelBtn" class="btn btn-outline-secondary w-100">Export</button>
             </div>
         </form>
     </div>
@@ -90,4 +90,25 @@
         </table>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+    document.getElementById('exportExcelBtn').addEventListener('click', function() {
+        // Clone the table so we don't modify the visible interface
+        let table = document.querySelector('.table').cloneNode(true);
+        
+        // Remove the "Actions" column (the last column) from every row
+        table.querySelectorAll('tr').forEach(row => {
+            if (row.children.length > 1) {
+                row.removeChild(row.lastElementChild);
+            }
+        });
+        
+        // Generate and download the Excel file
+        let wb = XLSX.utils.table_to_book(table, {sheet: "Transactions"});
+        XLSX.writeFile(wb, "Transactions_Export.xlsx");
+    });
+</script>
 {% endblock %}
