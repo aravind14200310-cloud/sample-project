@@ -34,8 +34,9 @@
                 <label class="form-label">To</label>
                 <input type="date" name="end_date" value="{{ end_date }}" class="form-control" />
             </div>
-            <div class="col-md-3 d-grid">
-                <button type="submit" class="btn btn-outline-primary">Filter</button>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-outline-primary w-100">Filter</button>
+                <button type="submit" name="export" value="csv" class="btn btn-outline-secondary w-100">Export</button>
             </div>
         </form>
     </div>
@@ -44,13 +45,13 @@
     <div class="col-md-6">
         <div class="card p-3 shadow-sm">
             <h6>Total Income</h6>
-            <p class="display-6 text-success mb-0">${{ totals.income }}</p>
+            <p class="display-6 text-success mb-0">₹{{ totals.income }}</p>
         </div>
     </div>
     <div class="col-md-6">
         <div class="card p-3 shadow-sm">
             <h6>Total Expense</h6>
-            <p class="display-6 text-danger mb-0">${{ totals.expense }}</p>
+            <p class="display-6 text-danger mb-0">₹{{ totals.expense }}</p>
         </div>
     </div>
 </div>
@@ -74,7 +75,7 @@
                         <td>{{ transaction.date }} {{ transaction.time|time:'H:i' }}</td>
                         <td>{{ transaction.get_transaction_type_display }}</td>
                         <td>{{ transaction.category.name }}</td>
-                        <td class="text-{% if transaction.transaction_type == 'income' %}success{% else %}danger{% endif %}">${{ transaction.amount }}</td>
+                        <td class="text-{% if transaction.transaction_type == 'income' %}success{% else %}danger{% endif %}">₹{{ transaction.amount }}</td>
                         <td>{{ transaction.get_payment_method_display }}</td>
                         <td>{{ transaction.notes|truncatechars:50 }}</td>
                         <td class="text-end">

@@ -20,7 +20,7 @@ urlpatterns = [
     path('categories/<int:pk>/delete/', views.category_delete, name='category_delete'),
     path('export/csv/', views.export_transactions_csv, name='export_transactions_csv'),
     path('login/', auth_views.LoginView.as_view(template_name='app/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('logout/', views.logout_view, name='logout'),
     path('password_change/', auth_views.PasswordChangeView.as_view(
         template_name='app/password_change.html',
         success_url='/password_change/done/'

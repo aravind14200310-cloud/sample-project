@@ -10,6 +10,24 @@
         <a class="btn btn-primary" href="{% url 'category_create' %}">Add Category</a>
     </div>
 </div>
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <form method="get" class="row gy-3 gx-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">From</label>
+                <input type="date" name="start_date" value="{{ start_date }}" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">To</label>
+                <input type="date" name="end_date" value="{{ end_date }}" class="form-control" />
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-outline-primary w-100">Filter</button>
+                <button type="submit" name="export" value="csv" class="btn btn-outline-secondary w-100">Export</button>
+            </div>
+        </form>
+    </div>
+</div>
 <div class="card shadow-sm">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">

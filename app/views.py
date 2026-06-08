@@ -5,7 +5,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum
 from django.http import HttpResponse
@@ -38,6 +38,12 @@ def register(request):
         form = UserRegistrationForm()
 
     return render(request, 'app/register.html', {'form': form})
+
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'You have successfully logged out.')
+    return redirect('login')
 
 
 @login_required

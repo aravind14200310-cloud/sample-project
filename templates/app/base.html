@@ -39,6 +39,7 @@
             </div>
         </div>
     </nav>
+    {% block banner %}
     <div class="container mt-4">
         <div class="hero d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-3">
@@ -53,6 +54,7 @@
             </div>
         </div>
     </div>
+    {% endblock %}
     <div class="container py-4">
         {% include 'app/alerts.html' %}
         {% block content %}{% endblock %}

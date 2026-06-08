@@ -7,7 +7,7 @@
             <div class="card-body text-center">
                 <h3 class="card-title mb-3">Delete transaction</h3>
                 <p>Are you sure you want to delete this transaction?</p>
-                <p><strong>{{ transaction.category.name }} — ${{ transaction.amount }}</strong></p>
+                <p><strong>{{ transaction.category.name }} — ₹{{ transaction.amount }}</strong></p>
                 <form method="post">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger me-2">Delete</button>

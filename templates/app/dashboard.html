@@ -1,5 +1,9 @@
 {% extends 'app/base.html' %}
 {% block title %}Dashboard - Expense Tracker{% endblock %}
+
+{% block banner %}
+{% endblock %}
+
 {% block content %}
 <div class="row gy-3">
     <div class="col-12">
@@ -15,10 +19,10 @@
         <div class="card p-3 shadow-sm h-100">
             <div class="card-accent">
                 <div class="metric">
-                    <div class="icon icon-income">$</div>
+                    <div class="icon icon-income">₹</div>
                     <div>
                         <small class="text-muted">Total Income</small>
-                        <div class="h4 mb-0 text-success">${{ income_total }}</div>
+                        <div class="h4 mb-0 text-success">₹{{ income_total }}</div>
                     </div>
                 </div>
             </div>
@@ -34,7 +38,7 @@
                     <div class="icon icon-expense">-</div>
                     <div>
                         <small class="text-muted">Total Expenses</small>
-                        <div class="h4 mb-0 text-danger">${{ expense_total }}</div>
+                        <div class="h4 mb-0 text-danger">₹{{ expense_total }}</div>
                     </div>
                 </div>
             </div>
@@ -50,7 +54,7 @@
                     <div class="icon icon-balance">B</div>
                     <div>
                         <small class="text-muted">Balance</small>
-                        <div class="h4 mb-0">${{ balance }}</div>
+                        <div class="h4 mb-0">₹{{ balance }}</div>
                     </div>
                 </div>
             </div>
@@ -66,11 +70,11 @@
                 <div class="row text-center">
                     <div class="col-6 border-end py-3">
                         <strong>Income</strong>
-                        <div class="fs-4 text-success">${{ month_income }}</div>
+                        <div class="fs-4 text-success">₹{{ month_income }}</div>
                     </div>
                     <div class="col-6 py-3">
                         <strong>Expenses</strong>
-                        <div class="fs-4 text-danger">${{ month_expense }}</div>
+                        <div class="fs-4 text-danger">₹{{ month_expense }}</div>
                     </div>
                 </div>
             </div>
@@ -84,47 +88,12 @@
                     {% for row in category_summary %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             {{ row.category__name }}
-                            <span>${{ row.total }}</span>
+                            <span>₹{{ row.total }}</span>
                         </li>
                     {% empty %}
                         <li class="list-group-item">No expense categories recorded yet.</li>
                     {% endfor %}
                 </ul>
-            </div>
-        </div>
-    </div>
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5>Transaction history</h5>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Category</th>
-                                <th>Type</th>
-                                <th>Amount</th>
-                                <th>Payment</th>
-                                <th>Notes</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for transaction in recent_transactions %}
-                                <tr>
-                                    <td>{{ transaction.date }} {{ transaction.time|time:'H:i' }}</td>
-                                    <td>{{ transaction.category.name }}</td>
-                                    <td>{{ transaction.get_transaction_type_display }}</td>
-                                    <td class="text-{% if transaction.transaction_type == 'income' %}success{% else %}danger{% endif %}">${{ transaction.amount }}</td>
-                                    <td>{{ transaction.get_payment_method_display }}</td>
-                                    <td>{{ transaction.notes|truncatechars:40 }}</td>
-                                </tr>
-                            {% empty %}
-                                <tr><td colspan="6">No recent transactions yet.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
             </div>
         </div>
     </div>
