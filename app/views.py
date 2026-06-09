@@ -1,6 +1,8 @@
 import calendar
 import csv
+import json
 import logging
+import re
 from datetime import date
 from decimal import Decimal
 
@@ -8,7 +10,7 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import (
@@ -342,3 +344,45 @@ def export_transactions_csv(request):
             transaction.notes,
         ])
     return response
+
+@login_required
+def process_voice_command(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            text = data.get('text', '').lower()
+
+            # 1. Detect Amount (Extracts the first number found)
+            amount_match = re.search(r'\b\d+(\.\d+)?\b', text)
+            amount = amount_match.group(0) if amount_match else ""
+
+            # 2. Detect Transaction Type
+            transaction_type = 'expense'
+            income_keywords = ['received', 'receive', 'salary', 'income', 'earned', 'got', 'credited']
+            if any(word in text for word in income_keywords):
+                transaction_type = 'income'
+
+            # 3. Detect Category
+            category = 'Other'
+            categories_map = {
+                'Food/Groceries': ['grocery', 'groceries', 'food', 'restaurant', 'meal', 'eat', 'supermarket'],
+                'Salary': ['salary', 'paycheck', 'wage'],
+                'Transport': ['bus', 'train', 'cab', 'uber', 'transport', 'fuel', 'petrol', 'gas', 'flight'],
+                'Shopping': ['shopping', 'clothes', 'bought', 'buy', 'shoes', 'electronics'],
+                'Bills': ['bill', 'electricity', 'water', 'rent', 'internet', 'wifi']
+            }
+
+            for cat, keywords in categories_map.items():
+                if any(keyword in text for keyword in keywords):
+                    category = cat
+                    break
+
+            # 4. Generate Notes
+            notes = text.capitalize()
+
+            return JsonResponse({
+                'status': 'success', 'transaction_type': transaction_type, 'amount': amount, 'category': category, 'notes': notes
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'invalid method'}, status=405)

@@ -1,0 +1,18 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'app/css/ai_voice.css' %}">
+
+<div class="ai-voice-wrapper">
+    <button type="button" id="ai-voice-btn" class="ai-voice-btn" title="Click to speak">
+        🎤
+    </button>
+    <div class="ai-voice-info">
+        <span id="ai-voice-status" class="ai-voice-status">Ready. Click the mic to speak.</span>
+    </div>
+</div>
+
+<script>
+    // Pass the Django URL to JavaScript
+    window.PROCESS_VOICE_URL = "{% url 'process_voice' %}";
+</script>
+<script src="{% static 'app/js/ai_voice.js' %}"></script>

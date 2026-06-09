@@ -8,20 +8,19 @@
 <div class="row gy-3">
     <div class="col-12">
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h2>Dashboard</h2>
+            <h2 class="fw-bold">Dashboard 🚀</h2>
             <div>
-                <a class="btn btn-outline-primary me-2" href="{% url 'transaction_create' %}">Add Transaction</a>
-                {# Export CSV button removed per request #}
+                <a class="btn btn-primary rounded-pill px-4 shadow-sm floating-element" href="{% url 'transaction_create' %}">➕ Add Transaction</a>
             </div>
         </div>
     </div>
     <div class="col-lg-4 col-md-6 fade-in">
-        <div class="card p-3 shadow-sm h-100">
+        <div class="card p-3 shadow-sm h-100 border-0 rounded-4">
             <div class="card-accent">
                 <div class="metric">
                     <div class="icon icon-income">₹</div>
                     <div>
-                        <small class="text-muted">Total Income</small>
+                        <small class="text-muted">Total Income 💰</small>
                         <div class="h4 mb-0 text-success">₹{{ income_total }}</div>
                     </div>
                 </div>
@@ -32,12 +31,12 @@
         </div>
     </div>
     <div class="col-lg-4 col-md-6 fade-in">
-        <div class="card p-3 shadow-sm h-100">
+        <div class="card p-3 shadow-sm h-100 border-0 rounded-4">
             <div class="card-accent">
                 <div class="metric">
                     <div class="icon icon-expense">-</div>
                     <div>
-                        <small class="text-muted">Total Expenses</small>
+                        <small class="text-muted">Total Expenses 📉</small>
                         <div class="h4 mb-0 text-danger">₹{{ expense_total }}</div>
                     </div>
                 </div>
@@ -48,12 +47,12 @@
         </div>
     </div>
     <div class="col-lg-4 col-md-12 fade-in">
-        <div class="card p-3 shadow-sm h-100">
+        <div class="card p-3 shadow-sm h-100 border-0 rounded-4">
             <div class="card-accent">
                 <div class="metric">
                     <div class="icon icon-balance">B</div>
                     <div>
-                        <small class="text-muted">Balance</small>
+                        <small class="text-muted">Balance ⚖️</small>
                         <div class="h4 mb-0">₹{{ balance }}</div>
                     </div>
                 </div>
@@ -64,9 +63,9 @@
         </div>
     </div>
     <div class="col-lg-6">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
             <div class="card-body">
-                <h5>Monthly summary</h5>
+                <h5 class="fw-bold mb-4">Monthly summary 📅</h5>
                 <div class="row text-center">
                     <div class="col-6 border-end py-3">
                         <strong>Income</strong>
@@ -81,14 +80,14 @@
         </div>
     </div>
     <div class="col-lg-6">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
             <div class="card-body">
-                <h5>Spending by category</h5>
+                <h5 class="fw-bold mb-4">Spending by category 🛒</h5>
                 <ul class="list-group list-group-flush">
                     {% for row in category_summary %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                             {{ row.category__name }}
-                            <span>₹{{ row.total }}</span>
+                            <span class="badge bg-primary rounded-pill">₹{{ row.total }}</span>
                         </li>
                     {% empty %}
                         <li class="list-group-item">No expense categories recorded yet.</li>
@@ -98,9 +97,9 @@
         </div>
     </div>
     <div class="col-12">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm border-0 rounded-4">
             <div class="card-body">
-                <h5>Income &amp; Expense trends</h5>
+                <h5 class="fw-bold mb-4">Income &amp; Expense trends 📈</h5>
                 <canvas id="transactionsChart" height="110"></canvas>
             </div>
         </div>

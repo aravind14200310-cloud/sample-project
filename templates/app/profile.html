@@ -1,44 +1,128 @@
 {% extends 'app/base.html' %}
 {% block title %}Profile - Expense Tracker{% endblock %}
 {% block content %}
+<style>
+    .profile-form input[type="text"],
+    .profile-form input[type="password"],
+    .profile-form input[type="email"],
+    .profile-form input[type="number"],
+    .profile-form input[type="tel"],
+    .profile-form input[type="file"],
+    .profile-form select {
+        display: block;
+        width: 100%;
+        padding: 0.8rem 1.25rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #29527a;
+        background-color: #e7eaee;
+        background-clip: padding-box;
+        border: 2px solid transparent;
+        border-radius: 1rem;
+        transition: all 0.3s ease-in-out;
+        margin-top: 0.4rem;
+    }
+    .profile-form input:focus,
+    .profile-form select:focus {
+        background-color: #f6f4fa;
+        border-color: #7c3aed;
+        outline: 0;
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+    }
+    .profile-form input[type="file"] {
+        padding: 0.55rem 1.25rem; /* Tweak padding for file input */
+    }
+    .profile-form label {
+        font-weight: 600;
+        color: #254768;
+        margin-left: 0.25rem;
+        font-size: 0.95rem;
+    }
+    .profile-form .helptext {
+        display: block;
+        margin-top: 0.25rem;
+        margin-left: 0.5rem;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    .stat-item {
+        background-color: #fff;
+        border-radius: 1rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.8rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+</style>
+
 <div class="row gy-4">
     <div class="col-lg-4">
-        <div class="card shadow-sm text-center p-4">
-            <img src="{{ request.user.profile.image_url }}" class="rounded-circle mb-3 profile-avatar" alt="Profile picture">
-            <h4>{{ request.user.get_full_name|default:request.user.username }}</h4>
-            <p class="text-muted mb-1">{{ request.user.email }}</p>
-            <p class="text-muted">{{ request.user.profile.phone_number|default:'Phone not set' }}</p>
+        <div class="card shadow-lg border-0 rounded-4 text-center p-4 animate-fade" style="background: linear-gradient(180deg, #ffffff, #f8f9fa);">
+            <div class="position-relative d-inline-block mx-auto mb-3">
+                <img src="{{ request.user.profile.image_url }}" class="rounded-circle profile-avatar shadow" alt="Profile picture" style="width: 130px; height: 130px; object-fit: cover; border: 4px solid #fff;">
+                <span class="position-absolute bottom-0 end-0 bg-primary rounded-circle p-2 shadow-sm text-white floating-element" style="line-height: 1; font-size: 1.2rem;">✨</span>
+            </div>
+            <h4 class="fw-bold mb-1" style="color: #254768;">{{ request.user.get_full_name|default:request.user.username }}</h4>
+            <p class="text-muted mb-3 small">{{ request.user.email }}</p>
+            <div>
+                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 fw-semibold">{{ request.user.profile.phone_number|default:'Phone not set 📱' }}</span>
+            </div>
         </div>
-        <div class="card shadow-sm mt-4 p-3">
-            <h5 class="mb-3">Personal statistics</h5>
-            <p><strong>Total income:</strong> ₹{{ stats.income_total }}</p>
-            <p><strong>Total expenses:</strong> ₹{{ stats.expense_total }}</p>
-            <p><strong>Transactions:</strong> {{ stats.transaction_count }}</p>
+        
+        <div class="card shadow-lg border-0 rounded-4 mt-4 p-4 animate-fade" style="background-color: #f8f9fa; animation-delay: 0.1s;">
+            <h5 class="mb-4 fw-bold" style="color: #254768;">Personal statistics 📊</h5>
+            <div class="stat-item">
+                <span class="text-muted fw-semibold">Total income 💰</span>
+                <span class="fs-5 fw-bold text-success">₹{{ stats.income_total }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="text-muted fw-semibold">Total expenses 📉</span>
+                <span class="fs-5 fw-bold text-danger">₹{{ stats.expense_total }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="text-muted fw-semibold">Transactions 💳</span>
+                <span class="fs-5 fw-bold" style="color: #7c3aed;">{{ stats.transaction_count }}</span>
+            </div>
         </div>
     </div>
     <div class="col-lg-8">
-        <div class="card shadow-sm p-4">
-            <h4>Edit profile</h4>
-            <form method="post" enctype="multipart/form-data" novalidate>
+        <div class="card shadow-lg border-0 rounded-4 p-4 p-md-5 animate-fade" style="animation-delay: 0.2s; overflow: hidden;">
+            <h4 class="fw-bold mb-1" style="color: #254768;">Edit profile 🛠️</h4>
+            <p class="text-muted mb-4 border-bottom pb-3">Update your personal information and preferences.</p>
+            <form method="post" enctype="multipart/form-data" novalidate class="profile-form">
                 {% csrf_token %}
+                
+                {% if user_form.non_field_errors or profile_form.non_field_errors %}
+                    <div class="alert alert-danger rounded-4 py-2 px-3 mb-4 border-0 shadow-sm" style="background-color: #fee2e2; color: #b91c1c;">
+                        <small class="fw-semibold">⚠️ Please correct the errors below.</small>
+                    </div>
+                {% endif %}
+
                 <div class="row g-3">
                     {% for field in user_form %}
-                        <div class="col-md-6">
-                            <label class="form-label">{{ field.label }}</label>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                             {{ field }}
-                            {% if field.errors %}<div class="text-danger small">{{ field.errors|striptags }}</div>{% endif %}
+                            {% if field.help_text %}<small class="helptext">{{ field.help_text|safe }}</small>{% endif %}
+                            {% if field.errors %}<div class="text-danger small mt-2 ms-2 fw-semibold">{{ field.errors|striptags }}</div>{% endif %}
                         </div>
                     {% endfor %}
                     {% for field in profile_form %}
-                        <div class="col-md-6">
-                            <label class="form-label">{{ field.label }}</label>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                             {{ field }}
-                            {% if field.errors %}<div class="text-danger small">{{ field.errors|striptags }}</div>{% endif %}
+                            {% if field.help_text %}<small class="helptext">{{ field.help_text|safe }}</small>{% endif %}
+                            {% if field.errors %}<div class="text-danger small mt-2 ms-2 fw-semibold">{{ field.errors|striptags }}</div>{% endif %}
                         </div>
                     {% endfor %}
                 </div>
-                <button type="submit" class="btn btn-primary mt-4">Save changes</button>
-                <a class="btn btn-link mt-4" href="{% url 'password_change' %}">Change password</a>
+                <div class="d-flex align-items-center gap-3 mt-4 pt-3">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 py-2.5 fw-bold shadow-sm" style="font-size: 1.05rem;">💾 Save changes</button>
+                    <a class="btn btn-outline-secondary rounded-pill px-4 py-2.5 fw-bold shadow-sm" href="{% url 'password_change' %}">🔐 Change password</a>
+                </div>
             </form>
         </div>
     </div>

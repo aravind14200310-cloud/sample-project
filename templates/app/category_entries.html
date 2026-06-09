@@ -3,10 +3,10 @@
 {% block content %}
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3 gap-2">
     <div>
-        <h2>Saved entries for {{ category.name }}</h2>
+        <h2>Saved entries for {{ category.name }} 📂</h2>
         <p class="text-muted">Previously saved transactions for this category.</p>
     </div>
-    <a class="btn btn-secondary" href="{% url 'category_list' %}">Back to Categories</a>
+    <a class="btn btn-secondary" href="{% url 'category_list' %}">🔙 Back to Categories</a>
 </div>
 <div class="card mb-4 shadow-sm">
     <div class="card-body">
@@ -20,8 +20,8 @@
                 <input type="date" id="endDate" class="form-control" />
             </div>
             <div class="col-md-4 d-flex gap-2">
-                <button type="button" id="filterBtn" class="btn btn-outline-primary w-100">Filter</button>
-                <button type="button" id="exportExcelBtn" class="btn btn-outline-secondary w-100">Export</button>
+                <button type="button" id="filterBtn" class="btn btn-outline-primary w-100">🔍 Filter</button>
+                <button type="button" id="exportExcelBtn" class="btn btn-outline-secondary w-100">📥 Export</button>
             </div>
         </form>
     </div>
@@ -31,12 +31,12 @@
         <table class="table table-hover align-middle mb-0">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Amount</th>
+                    <th>Date 🕒</th>
+                    <th>Amount 💲</th>
                     <th>Type</th>
                     <th>Payment</th>
                     <th>Notes</th>
-                    <th class="text-end">Actions</th>
+                    <th class="text-end">Actions 🛠️</th>
                 </tr>
             </thead>
             <tbody>
@@ -48,8 +48,8 @@
                         <td>{{ transaction.get_payment_method_display }}</td>
                         <td>{{ transaction.notes|truncatechars:50 }}</td>
                         <td class="text-end">
-                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'transaction_update' transaction.pk %}">Edit</a>
-                            <a class="btn btn-sm btn-outline-danger" href="{% url 'transaction_delete' transaction.pk %}">Delete</a>
+                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'transaction_update' transaction.pk %}">✏️ Edit</a>
+                            <a class="btn btn-sm btn-outline-danger" href="{% url 'transaction_delete' transaction.pk %}">🗑️ Delete</a>
                         </td>
                     </tr>
                 {% empty %}

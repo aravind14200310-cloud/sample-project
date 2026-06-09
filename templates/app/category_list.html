@@ -3,38 +3,38 @@
 {% block content %}
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3 gap-2">
     <div>
-        <h2>Categories</h2>
+        <h2 class="fw-bold">Categories 📂</h2>
         <p class="text-muted">Manage expense and income categories.</p>
     </div>
     <div class="btn-group">
-        <a class="btn btn-primary" href="{% url 'category_create' %}">Add Category</a>
+        <a class="btn btn-primary rounded-pill px-4 shadow-sm floating-element" href="{% url 'category_create' %}">➕ Add Category</a>
     </div>
 </div>
-<div class="card shadow-sm">
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-            <thead>
+            <thead class="table-light">
                 <tr>
-                    <th>Name</th>
+                    <th>Name 🏷️</th>
                     <th>Type</th>
-                    <th>Description</th>
-                    <th class="text-end">Actions</th>
+                    <th>Description 📝</th>
+                    <th class="text-end">Actions 🛠️</th>
                 </tr>
             </thead>
             <tbody>
                 {% for category in categories %}
                     <tr>
                         <td>
-                            <a class="text-decoration-none fw-semibold" href="{% url 'category_entries' category.pk %}">
+                            <a class="text-decoration-none fw-bold text-primary" href="{% url 'category_entries' category.pk %}">
                                 {{ category.name }}
                             </a>
                         </td>
-                        <td>{{ category.get_category_type_display }}</td>
+                        <td><span class="badge {% if category.category_type == 'income' %}bg-success{% else %}bg-danger{% endif %} bg-opacity-10 text-{% if category.category_type == 'income' %}success{% else %}danger{% endif %} rounded-pill px-3">{{ category.get_category_type_display }}</span></td>
                         <td>{{ category.description|truncatechars:50 }}</td>
                         <td class="text-end">
                             {% if category.user == request.user %}
-                                <a class="btn btn-sm btn-outline-secondary" href="{% url 'category_update' category.pk %}">Edit</a>
-                                <a class="btn btn-sm btn-outline-danger" href="{% url 'category_delete' category.pk %}">Delete</a>
+                                <a class="btn btn-sm btn-outline-secondary rounded-3" href="{% url 'category_update' category.pk %}">✏️ Edit</a>
+                                <a class="btn btn-sm btn-outline-danger rounded-3" href="{% url 'category_delete' category.pk %}">🗑️ Delete</a>
                             {% else %}
                                 <span class="badge bg-secondary">Default</span>
                             {% endif %}

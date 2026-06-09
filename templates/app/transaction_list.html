@@ -3,70 +3,69 @@
 {% block content %}
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3 gap-2">
     <div>
-        <h2>Transactions</h2>
+        <h2 class="fw-bold">Transactions 💸</h2>
         <p class="text-muted">Search, filter, and manage your income and expenses.</p>
     </div>
     <div class="btn-group">
-        <a class="btn btn-primary" href="{% url 'transaction_create' %}">Add Transaction</a>
-        {# Export CSV button removed per request #}
+        <a class="btn btn-primary rounded-pill px-4 shadow-sm floating-element" href="{% url 'transaction_create' %}">➕ Add Transaction</a>
     </div>
 </div>
-<div class="card mb-4 shadow-sm">
+<div class="card border-0 mb-4 shadow-sm rounded-4">
     <div class="card-body">
         <form method="get" class="row gy-3 gx-3 align-items-end">
             <div class="col-md-3">
-                <label class="form-label">Search</label>
-                <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Category or note" />
+                <label class="form-label fw-semibold">Search</label>
+                <input type="text" name="q" value="{{ query }}" class="form-control rounded-3" placeholder="Category or note" />
             </div>
             <div class="col-md-2">
-                <label class="form-label">Type</label>
-                <select name="type" class="form-select">
+                <label class="form-label fw-semibold">Type</label>
+                <select name="type" class="form-select rounded-3">
                     <option value="all" {% if transaction_type == 'all' %}selected{% endif %}>All</option>
                     <option value="income" {% if transaction_type == 'income' %}selected{% endif %}>Income</option>
                     <option value="expense" {% if transaction_type == 'expense' %}selected{% endif %}>Expense</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label">From</label>
-                <input type="date" name="start_date" value="{{ start_date }}" class="form-control" />
+                <label class="form-label fw-semibold">From</label>
+                <input type="date" name="start_date" value="{{ start_date }}" class="form-control rounded-3" />
             </div>
             <div class="col-md-2">
-                <label class="form-label">To</label>
-                <input type="date" name="end_date" value="{{ end_date }}" class="form-control" />
+                <label class="form-label fw-semibold">To</label>
+                <input type="date" name="end_date" value="{{ end_date }}" class="form-control rounded-3" />
             </div>
             <div class="col-md-3 d-flex gap-2">
-                <button type="submit" name="filter" value="true" class="btn btn-outline-primary w-100">Filter</button>
-                <button type="button" id="exportExcelBtn" class="btn btn-outline-secondary w-100">Export</button>
+                <button type="submit" name="filter" value="true" class="btn btn-primary rounded-3 w-100">🔍 Filter</button>
+                <button type="button" id="exportExcelBtn" class="btn btn-outline-secondary rounded-3 w-100">📥 Export</button>
             </div>
         </form>
     </div>
 </div>
 <div class="row mb-4">
     <div class="col-md-6">
-        <div class="card p-3 shadow-sm">
-            <h6>Total Income</h6>
+        <div class="card p-4 border-0 shadow-sm rounded-4">
+            <h6 class="text-muted fw-bold text-uppercase">Total Income 🤑</h6>
             <p class="display-6 text-success mb-0">₹{{ totals.income }}</p>
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card p-3 shadow-sm">
-            <h6>Total Expense</h6>
+        <div class="card p-4 border-0 shadow-sm rounded-4">
+            <h6 class="text-muted fw-bold text-uppercase">Total Expense 🛒</h6>
             <p class="display-6 text-danger mb-0">₹{{ totals.expense }}</p>
         </div>
     </div>
 </div>
-<div class="card shadow-sm">
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-            <thead>
+            <thead class="table-light">
                 <tr>
-                    <th>Date</th>
+                    <th>Date 🕒</th>
                     <th>Type</th>
-                    <th>Category</th>
-                    <th>Amount</th>
+                    <th>Category 🏷️</th>
+                    <th>Amount 💲</th>
                     <th>Payment</th>
                     <th>Notes</th>
-                    <th class="text-end">Actions</th>
+                    <th class="text-end">Actions 🛠️</th>
                 </tr>
             </thead>
             <tbody>
@@ -79,8 +78,8 @@
                         <td>{{ transaction.get_payment_method_display }}</td>
                         <td>{{ transaction.notes|truncatechars:50 }}</td>
                         <td class="text-end">
-                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'transaction_update' transaction.pk %}">Edit</a>
-                            <a class="btn btn-sm btn-outline-danger" href="{% url 'transaction_delete' transaction.pk %}">Delete</a>
+                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'transaction_update' transaction.pk %}">✏️ Edit</a>
+                            <a class="btn btn-sm btn-outline-danger" href="{% url 'transaction_delete' transaction.pk %}">🗑️ Delete</a>
                         </td>
                     </tr>
                 {% empty %}

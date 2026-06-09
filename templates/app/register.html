@@ -1,17 +1,95 @@
 {% extends 'app/base.html' %}
 {% block title %}Register - Expense Tracker{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h3 class="card-title mb-3">Create your account</h3>
-                <form method="post" novalidate>
+<style>
+    .register-container {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .register-form input[type="text"],
+    .register-form input[type="password"],
+    .register-form input[type="email"] {
+        display: block;
+        width: 100%;
+        padding: 0.8rem 1.25rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #29527a;
+        background-color: #e7eaee;
+        background-clip: padding-box;
+        border: 2px solid transparent;
+        border-radius: 1rem;
+        transition: all 0.3s ease-in-out;
+        margin-top: 0.4rem;
+    }
+    .register-form input:focus {
+        background-color: #f6f4fa;
+        border-color: #7c3aed;
+        outline: 0;
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+    }
+    .register-form label {
+        font-weight: 600;
+        color: #254768;
+        margin-left: 0.25rem;
+        font-size: 0.95rem;
+    }
+    .register-form .helptext {
+        display: block;
+        margin-top: 0.25rem;
+        margin-left: 0.5rem;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+</style>
+
+<div class="row w-100 m-0 register-container">
+    <div class="col-md-8 col-lg-6 col-xl-5 px-3">
+        <div class="card shadow-lg border-0 rounded-4 animate-fade" style="overflow: hidden;">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center text-white rounded-circle mb-3 shadow-sm floating-element" style="width: 70px; height: 70px; background: linear-gradient(135deg, #7c3aed, #4f46e5);">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="card-title fw-bold mb-1">Create your account 🌟</h3>
+                    <p class="text-muted">Join us to start managing your expenses.</p>
+                </div>
+                
+                <form method="post" novalidate class="register-form">
                     {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-primary w-100">Register</button>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger rounded-4 py-2 px-3 mb-4 border-0 shadow-sm" style="background-color: #fee2e2; color: #b91c1c;">
+                            <small class="fw-semibold">⚠️ {{ form.non_field_errors|striptags }}</small>
+                        </div>
+                    {% endif %}
+                    
+                    {% for field in form %}
+                        <div class="mb-4">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <small class="helptext">{{ field.help_text|safe }}</small>
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-2 ms-2 fw-semibold">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-primary rounded-pill py-2.5 fw-bold w-100 shadow-sm mt-3" style="font-size: 1.1rem; padding-top: 10px; padding-bottom: 10px;">
+                        ✨ Register
+                    </button>
                 </form>
-                <p class="text-center mt-3">Already have an account? <a href="{% url 'login' %}">Login</a></p>
+                
+                <div class="mt-4 pt-3 border-top text-center">
+                    <p class="text-muted mb-0">Already have an account? <a href="{% url 'login' %}" class="fw-bold text-decoration-none" style="color: #4f46e5;">Login here 👋</a></p>
+                </div>
             </div>
         </div>
     </div>
