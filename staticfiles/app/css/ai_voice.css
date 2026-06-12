@@ -23,13 +23,13 @@
     margin-top: 10px;
     margin-bottom: 15px;
     padding: 10px;
-    background: rgba(111, 66, 193, 0.05);
+    background: rgba(238, 38, 3, 0.993);
     border: 1px solid rgba(111, 66, 193, 0.2);
     border-radius: 8px;
 }
 
 body.dark-mode .ai-voice-wrapper {
-    background: rgba(111, 66, 193, 0.1);
+    background: rgba(214, 102, 108, 0.979);
     border-color: rgba(111, 66, 193, 0.3);
 }
 

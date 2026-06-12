@@ -34,13 +34,18 @@ function initializeVoiceAssistant() {
     recognition.lang = 'en-US';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
+    recognition.continuous = true;
 
     let isRecording = false;
+    let manualStop = true;
 
     voiceBtn.addEventListener('click', () => {
         if (isRecording) {
+            manualStop = true;
             recognition.stop();
+            statusText.textContent = "Voice input stopped.";
         } else {
+            manualStop = false;
             try {
                 recognition.start();
             } catch (err) {
@@ -52,19 +57,19 @@ function initializeVoiceAssistant() {
     recognition.onstart = () => {
         isRecording = true;
         voiceBtn.classList.add('listening');
-        statusText.textContent = "Listening... Speak your transaction or command.";
     };
 
     recognition.onerror = (event) => {
-        isRecording = false;
-        voiceBtn.classList.remove('listening');
         if (event.error === 'not-allowed') {
+            manualStop = true;
+            isRecording = false;
+            voiceBtn.classList.remove('listening');
             statusText.textContent = "Microphone access denied.";
             speakText("Microphone permission was denied.");
         } else if (event.error === 'no-speech') {
-            statusText.textContent = "No speech detected. Try again.";
+            // Ignore 'no-speech' timeout to seamlessly auto-restart in onend
         } else {
-            statusText.textContent = `Error: ${event.error}`;
+            console.warn(`Mic error ignored: ${event.error}`);
         }
     };
 
@@ -74,12 +79,30 @@ function initializeVoiceAssistant() {
     };
 
     recognition.onend = () => {
-        isRecording = false;
-        voiceBtn.classList.remove('listening');
+        if (!manualStop) {
+            const tryRestart = () => {
+                if (manualStop) return; // Stop trying if user clicked the button while waiting
+                // If the computer is currently speaking, wait and try again
+                if (window.speechSynthesis && window.speechSynthesis.speaking) {
+                    setTimeout(tryRestart, 250);
+                    return;
+                }
+                try {
+                    recognition.start();
+                } catch (err) {
+                    if (err.name !== 'InvalidStateError') console.error("Mic auto-restart error:", err);
+                }
+            };
+            setTimeout(tryRestart, 100);
+        } else {
+            isRecording = false;
+            voiceBtn.classList.remove('listening');
+        }
     };
 
     recognition.onresult = async (event) => {
-        const transcript = event.results[0][0].transcript.toLowerCase();
+        const current = event.resultIndex;
+        const transcript = event.results[current][0].transcript.toLowerCase();
         statusText.textContent = `Recognized: "${transcript}"`;
 
         // --- 1. Global Navigation Commands ---
@@ -122,7 +145,7 @@ function initializeVoiceAssistant() {
                 const data = await response.json();
                 if (data.status === 'success') {
                     speakText("Transaction detected.");
-                    fillTransactionForm(data, event.results[0][0].transcript);
+                    fillTransactionForm(data, event.results[current][0].transcript);
                     statusText.innerHTML = `✅ Form auto-filled successfully! <br><small class="text-muted">Extracted: ${data.amount ? '$'+data.amount : 'No amount'}, ${data.category}, ${data.transaction_type}</small>`;
                     if (clearBtn) clearBtn.style.display = 'inline-block';
                 } else {
