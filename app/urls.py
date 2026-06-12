@@ -20,6 +20,7 @@ urlpatterns = [
     path('categories/<int:pk>/delete/', views.category_delete, name='category_delete'),
     path('export/csv/', views.export_transactions_csv, name='export_transactions_csv'),
     path('process-voice/', views.process_voice_command, name='process_voice'),
+    path('api/ai-chat/', views.ai_assistant_chat, name='ai_chat'),
     path('login/', auth_views.LoginView.as_view(template_name='app/login.html'), name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('password_change/', auth_views.PasswordChangeView.as_view(

@@ -386,3 +386,77 @@ def process_voice_command(request):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'invalid method'}, status=405)
+
+
+@login_required
+def ai_assistant_chat(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            text = data.get('text', '').lower()
+            user = request.user
+
+            # Chat Assistant: Answer Spending Insights
+            if 'spend this month' in text or 'spent this month' in text:
+                today = date.today()
+                total = Transaction.objects.filter(
+                    user=user, transaction_type='expense', date__year=today.year, date__month=today.month
+                ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0')
+                return JsonResponse({'action': 'chat', 'message': f'You have spent ${total:.2f} this month.'})
+            
+            elif 'highest expense' in text:
+                highest = Transaction.objects.filter(user=user, transaction_type='expense').order_by('-amount').first()
+                if highest:
+                    return JsonResponse({'action': 'chat', 'message': f'Your highest expense was ${highest.amount} on {highest.category.name}.'})
+                return JsonResponse({'action': 'chat', 'message': 'You have no expenses yet.'})
+            
+            elif 'recent transactions' in text:
+                recent = Transaction.objects.filter(user=user).order_by('-date', '-time')[:3]
+                if recent:
+                    msg = "Here are your recent transactions:<br>" + "<br>".join([f"- {t.date}: ${t.amount} for {t.category.name}" for t in recent])
+                    return JsonResponse({'action': 'chat', 'message': msg})
+                return JsonResponse({'action': 'chat', 'message': 'No recent transactions found.'})
+            
+            else:
+                # Smart Transaction Detection
+                amount_match = re.search(r'\b\d+(\.\d+)?\b', text)
+                amount = amount_match.group(0) if amount_match else ""
+
+                transaction_type = 'expense'
+                if any(word in text for word in ['received', 'receive', 'salary', 'income', 'earned', 'got', 'credited']):
+                    transaction_type = 'income'
+
+                category_id = ""
+                categories_map = {
+                    'Food': ['grocery', 'groceries', 'food', 'restaurant', 'meal', 'eat', 'supermarket'],
+                    'Salary': ['salary', 'paycheck', 'wage'],
+                    'Transport': ['bus', 'train', 'cab', 'uber', 'transport', 'fuel', 'petrol', 'gas', 'flight'],
+                    'Shopping': ['shopping', 'clothes', 'bought', 'buy', 'shoes', 'electronics'],
+                    'Bills': ['bill', 'electricity', 'water', 'rent', 'internet', 'wifi']
+                }
+
+                matched_cat_name = None
+                for cat, keywords in categories_map.items():
+                    if any(keyword in text for keyword in keywords):
+                        matched_cat_name = cat
+                        break
+
+                if matched_cat_name:
+                    cat_obj = Category.objects.filter(Q(user=user) | Q(user__isnull=True), name__icontains=matched_cat_name).first()
+                    if cat_obj:
+                        category_id = cat_obj.id
+
+                notes = text.capitalize()
+
+                return JsonResponse({
+                    'action': 'fill_form',
+                    'transaction_type': transaction_type,
+                    'amount': amount,
+                    'category': category_id,
+                    'notes': notes,
+                    'message': 'I have filled out the form based on your input! Please review and save.'
+                })
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'invalid method'}, status=405)

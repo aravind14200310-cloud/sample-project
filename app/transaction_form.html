@@ -1,0 +1,243 @@
+{% extends 'app/base.html' %}
+
+{% block content %}
+<style>
+  .ai-panel {
+    background: linear-gradient(145deg, #f3e5f5, #e0c3fc);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    padding: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .ai-header {
+    color: #4a148c;
+    font-weight: bold;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.25rem;
+  }
+  .chat-box {
+    flex-grow: 1;
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    overflow-y: auto;
+    min-height: 280px;
+    max-height: 400px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+  }
+  .chat-msg {
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    border-radius: 15px;
+    font-size: 0.95rem;
+    max-width: 85%;
+    word-wrap: break-word;
+  }
+  .msg-ai {
+    background: #ede7f6;
+    color: #311b92;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+  }
+  .msg-user {
+    background: #6200ea;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+  }
+  .ai-input-group {
+    display: flex;
+    gap: 10px;
+  }
+  .ai-input-group input {
+    flex-grow: 1;
+    border: 1px solid #d1c4e9;
+    border-radius: 20px;
+    padding: 10px 15px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .ai-input-group input:focus {
+    border-color: #6200ea;
+  }
+  .ai-btn {
+    border: none;
+    background: #6200ea;
+    color: white;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.1s;
+  }
+  .ai-btn:hover {
+    background: #311b92;
+    transform: scale(1.05);
+  }
+  .ai-btn:active {
+    transform: scale(0.95);
+  }
+  .mic-btn {
+    background: #fff;
+    color: #6200ea;
+    border: 2px solid #6200ea;
+  }
+  .mic-btn:hover {
+    background: #ede7f6;
+  }
+  .mic-btn.listening {
+    background: #f44336;
+    color: white;
+    border-color: #f44336;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+  }
+  .ai-suggestions {
+    font-size: 0.85rem;
+    color: #5e35b1;
+    margin-top: 15px;
+  }
+  .ai-suggestions ul {
+    padding-left: 20px;
+    margin-bottom: 0;
+  }
+</style>
+
+<div class="container mt-4 mb-5">
+  <div class="row g-4">
+    <!-- Transaction Form -->
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+          <h4 class="mb-0" style="color: #4a148c; font-weight: bold;">{{ title|default:"Add Transaction" }}</h4>
+        </div>
+        <div class="card-body">
+          <form method="post" id="transactionForm">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary w-100 mt-3 py-2" style="background-color: #6200ea; border-color: #6200ea; border-radius: 8px;">Save Transaction</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Assistant Panel -->
+    <div class="col-lg-6">
+      <div class="ai-panel">
+        <div class="ai-header">
+          <span>🤖</span> AI Assistant
+        </div>
+        <div class="chat-box" id="chatBox">
+          <div class="chat-msg msg-ai">
+            Hi! I can help you fill out this form or answer questions about your expenses. Try saying <strong>"I spent $50 on groceries today"</strong> or ask <strong>"What is my highest expense?"</strong>
+          </div>
+        </div>
+        <div class="ai-input-group">
+          <button type="button" class="ai-btn mic-btn" id="micBtn" title="Use Voice">🎤</button>
+          <input type="text" id="aiInput" placeholder="Ask AI anything..." autocomplete="off">
+          <button type="button" class="ai-btn" id="sendBtn" title="Send">➤</button>
+        </div>
+        <div class="ai-suggestions">
+          <strong>Suggestions:</strong>
+          <ul>
+            <li>Auto-fill category & amount</li>
+            <li>"How much did I spend this month?"</li>
+            <li>"Show my recent transactions"</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const chatBox = document.getElementById('chatBox');
+    const aiInput = document.getElementById('aiInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const micBtn = document.getElementById('micBtn');
+
+    function addMessage(text, isUser = false) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `chat-msg ${isUser ? 'msg-user' : 'msg-ai'}`;
+      msgDiv.innerHTML = text;
+      chatBox.appendChild(msgDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendToAI(text) {
+      if (!text.trim()) return;
+      addMessage(text, true);
+      aiInput.value = '';
+
+      fetch("{% url 'ai_chat' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ text: text })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.action === 'fill_form') {
+          if (data.transaction_type) document.getElementById('id_transaction_type').value = data.transaction_type;
+          if (data.category) document.getElementById('id_category').value = data.category;
+          if (data.amount) document.getElementById('id_amount').value = data.amount;
+          if (data.notes) document.getElementById('id_notes').value = data.notes;
+          
+          document.querySelectorAll('#transactionForm select').forEach(el => el.dispatchEvent(new Event('change')));
+        }
+        addMessage(data.message || 'Sorry, I did not understand that.');
+      }).catch(err => {
+        addMessage('Sorry, something went wrong communicating with the server.');
+      });
+    }
+
+    sendBtn.addEventListener('click', () => sendToAI(aiInput.value));
+    aiInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendToAI(aiInput.value); });
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      let isListening = false;
+
+      micBtn.addEventListener('click', () => isListening ? recognition.stop() : recognition.start());
+
+      recognition.onstart = () => {
+        isListening = true;
+        micBtn.classList.add('listening');
+        aiInput.placeholder = "Listening...";
+      };
+
+      recognition.onresult = (event) => sendToAI(event.results[0][0].transcript);
+      
+      recognition.onerror = () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        aiInput.placeholder = "Ask AI anything...";
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        aiInput.placeholder = "Ask AI anything...";
+      };
+    } else {
+      micBtn.style.display = 'none';
+    }
+  });
+</script>
+{% endblock %}

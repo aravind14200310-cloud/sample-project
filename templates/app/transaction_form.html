@@ -1,31 +1,364 @@
 {% extends 'app/base.html' %}
 {% block title %}{{ title }} - Expense Tracker{% endblock %}
 {% block content %}
+<style>
+    #ai-voice-container {
+        position: fixed;
+        bottom: 6.5rem; /* Moved up so it doesn't overlap the + button */
+        right: 2rem;
+        z-index: 1055;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .ai-voice-btn {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        color: white;
+        border: none;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .ai-voice-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .ai-voice-btn.listening {
+        background: #f44336;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
+        70% { box-shadow: 0 0 0 15px rgba(244, 67, 54, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+    }
+
+    .ai-transcript-card {
+        background: white;
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        margin-bottom: 15px;
+        width: 280px;
+        text-align: center;
+        position: relative;
+        border: 1px solid #eee;
+        transition: opacity 0.3s, transform 0.3s;
+    }
+
+    #ai-transcript-text {
+        color: #333;
+        font-size: 0.95rem;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1.4;
+    }
+
+    .ai-stop-btn {
+        margin-top: 10px;
+        border: none;
+        background: #6c757d;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+    }
+
+    .ai-stop-btn:hover {
+        background: #5a6268;
+    }
+
+    .ai-transcript-card .success-message {
+        color: #198754;
+        font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+        #ai-voice-container {
+            bottom: 6.5rem;
+            right: 1.5rem;
+        }
+        .ai-voice-btn {
+            width: 55px;
+            height: 55px;
+        }
+        .ai-transcript-card {
+            width: calc(100vw - 4rem);
+            max-width: 280px;
+        }
+    }
+</style>
+
 <div class="row justify-content-center">
-    <div class="col-xl-8 col-lg-10">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h3 class="card-title mb-3">{{ title }}</h3>
-                <form method="post" novalidate>
-                    {% csrf_token %}
-                    <div class="row g-3">
-                        {% for field in form %}
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    {{ field.label_tag }}
-                                    {{ field }}
-                                    {% if field.errors %}
-                                        <div class="text-danger small">{{ field.errors|striptags }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    <button type="submit" class="btn btn-primary mt-3">Save transaction</button>
-                    <a class="btn btn-link mt-3" href="{% url 'transaction_list' %}">Cancel</a>
-                </form>
-            </div>
-        </div>
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+        <h4 class="mb-0" style="color: #4a148c; font-weight: bold;">{{ title|default:"Add Transaction" }}</h4>
+      </div>
+      <div class="card-body">
+        <form method="post" id="transactionForm" novalidate>
+          {% csrf_token %}
+          <div class="row g-3">
+              {% for field in form %}
+                  <div class="col-md-6">
+                      <div class="mb-3">
+                          {{ field.label_tag }}
+                          {{ field }}
+                          {% if field.errors %}
+                              <div class="text-danger small">{{ field.errors|striptags }}</div>
+                          {% endif %}
+                      </div>
+                  </div>
+              {% endfor %}
+          </div>
+          <button type="submit" class="btn btn-primary w-100 mt-3 py-2" style="background-color: #6200ea; border-color: #6200ea; border-radius: 8px;">Save Transaction</button>
+          <div class="text-center mt-2">
+            <a class="btn btn-link text-decoration-none" href="{% url 'transaction_list' %}">Cancel</a>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
+
+<!-- Floating AI Voice Button -->
+<div id="ai-voice-container">
+    <div id="ai-transcript-card" class="ai-transcript-card" style="display: none;">
+        <div id="ai-transcript-text">Listening...</div>
+        <button id="ai-stop-btn" class="ai-stop-btn" style="display: none;">Stop</button>
+    </div>
+    <button id="ai-voice-btn" class="ai-voice-btn" title="Speak Transaction">
+        <i class="fas fa-microphone"></i>
+    </button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const voiceBtn = document.getElementById('ai-voice-btn');
+    const transcriptCard = document.getElementById('ai-transcript-card');
+    const transcriptText = document.getElementById('ai-transcript-text');
+    const stopBtn = document.getElementById('ai-stop-btn');
+
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        if(voiceBtn) {
+            // Show a grayed-out button instead of hiding it completely so you know where it is
+            voiceBtn.style.background = '#6c757d';
+            voiceBtn.title = "Speech Recognition not supported in this browser";
+            voiceBtn.style.cursor = "not-allowed";
+            voiceBtn.addEventListener('click', (e) => { e.stopPropagation(); alert("Speech Recognition is not supported by your browser or requires a secure HTTPS connection. Please try using Google Chrome or Microsoft Edge."); });
+        }
+        console.warn("Speech Recognition not supported by this browser.");
+        return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+
+    let isListening = false;
+
+    const toggleListening = () => {
+        if (isListening) {
+            recognition.stop();
+        } else {
+            try {
+                recognition.start();
+            } catch (err) {
+                console.error("Speech recognition start error:", err);
+                alert("Could not start speech recognition. Please check microphone permissions and ensure you are on a secure (HTTPS) connection.");
+            }
+        }
+    };
+
+    voiceBtn.addEventListener('click', toggleListening);
+    stopBtn.addEventListener('click', () => recognition.stop());
+
+    recognition.onstart = () => {
+        isListening = true;
+        voiceBtn.classList.add('listening');
+        stopBtn.style.display = 'inline-block';
+        transcriptCard.style.display = 'block';
+        transcriptText.innerHTML = '<i>Listening...</i>';
+    };
+
+    recognition.onend = () => {
+        isListening = false;
+        voiceBtn.classList.remove('listening');
+        stopBtn.style.display = 'none';
+        setTimeout(() => {
+            // Hide card unless it's showing a success message
+            if (!transcriptText.querySelector('.success-message')) {
+                transcriptCard.style.display = 'none';
+            }
+        }, 4000);
+    };
+
+    recognition.onerror = (event) => {
+        let errorMessage = 'An error occurred during recognition.';
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            errorMessage = 'Microphone access denied. Please allow microphone access in your browser settings.';
+        } else if (event.error === 'no-speech') {
+            errorMessage = 'No speech detected. Please try again.';
+        }
+        transcriptText.textContent = errorMessage;
+        console.error('Speech recognition error:', event);
+    };
+
+    recognition.onresult = (event) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript;
+            } else {
+                interimTranscript += event.results[i][0].transcript;
+            }
+        }
+        
+        transcriptText.innerHTML = `"${finalTranscript || interimTranscript}"`;
+
+        if (finalTranscript) {
+            parseAndFillForm(finalTranscript.trim());
+        }
+    };
+
+    function parseAndFillForm(text) {
+        console.log('Parsing:', text);
+        let filledFields = 0;
+
+        // 1. Parse Amount
+        const amountMatch = text.match(/(\d[\d,]*\.?\d*)\s*(rupees|rs|inr)?/i);
+        if (amountMatch && amountMatch[1]) {
+            const amount = amountMatch[1].replace(/,/g, '');
+            setFieldValue('id_amount', amount);
+            filledFields++;
+        }
+
+        // 2. Parse Transaction Type
+        if (/\b(spent|paid|bought|expense)\b/i.test(text)) {
+            setSelectByText('id_transaction_type', 'Expense');
+            filledFields++;
+        } else if (/\b(received|got|salary|income|deposit)\b/i.test(text)) {
+            setSelectByText('id_transaction_type', 'Income');
+            filledFields++;
+        }
+
+        // 3. Parse Payment Method
+        const paymentKeywords = {'upi': 'UPI', 'cash': 'Cash', 'card': 'Card', 'bank': 'Bank Transfer'};
+        for (const keyword in paymentKeywords) {
+            if (new RegExp(`\\b${keyword}\\b`, 'i').test(text)) {
+                setSelectByText('id_payment_method', paymentKeywords[keyword]);
+                filledFields++;
+                break;
+            }
+        }
+
+        // 4. Parse Date & Time
+        if (/\btoday\b/i.test(text)) {
+            const now = new Date();
+            setFieldValue('id_date', now.toISOString().split('T')[0]);
+            setFieldValue('id_time', now.toTimeString().substring(0,5));
+            filledFields++;
+        } else if (/\byesterday\b/i.test(text)) {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            setFieldValue('id_date', yesterday.toISOString().split('T')[0]);
+            filledFields++;
+        }
+
+        // 5. Parse Category and Notes
+        const categorySelect = document.getElementById('id_category');
+        
+        // Define common synonyms/keywords for categories to make it smarter
+        const categoryKeywords = {
+            'Food': ['tea', 'coffee', 'lunch', 'dinner', 'breakfast', 'snack', 'restaurant', 'meal', 'grocery', 'food', 'drink'],
+            'Transport': ['bus', 'train', 'taxi', 'cab', 'auto', 'metro', 'flight', 'petrol', 'fuel', 'transport', 'travel', 'uber', 'ola'],
+            'Entertainment': ['movie', 'cinema', 'game', 'concert', 'entertainment', 'party'],
+            'Shopping': ['clothes', 'dress', 'shoe', 'electronics', 'shopping', 'buy', 'shirt', 'pant'],
+            'Bills': ['electricity', 'water', 'internet', 'recharge', 'phone', 'mobile', 'bill', 'wifi', 'rent'],
+            'Health': ['hospital', 'doctor', 'medicine', 'pharmacy', 'clinic', 'health', 'medical', 'pill']
+        };
+
+        if (categorySelect) {
+            let categoryMatched = false;
+            // 1. Try exact match with category name
+            for (let option of categorySelect.options) {
+                if (option.value && new RegExp(`\\b${option.text}\\b`, 'i').test(text)) {
+                    setSelectByText('id_category', option.text);
+                    filledFields++;
+                    categoryMatched = true;
+                    break;
+                }
+            }
+            
+            // 2. If no exact match, try matching by keywords
+            if (!categoryMatched) {
+                for (const [categoryName, keywords] of Object.entries(categoryKeywords)) {
+                    for (const keyword of keywords) {
+                        if (new RegExp(`\\b${keyword}\\b`, 'i').test(text)) {
+                            // Find the actual dropdown option that matches our mapped category Name
+                            for (let option of categorySelect.options) {
+                                if (option.text.toLowerCase().includes(categoryName.toLowerCase())) {
+                                    setSelectByText('id_category', option.text);
+                                    filledFields++;
+                                    categoryMatched = true;
+                                    break;
+                                }
+                            }
+                            if (categoryMatched) break;
+                        }
+                    }
+                    if (categoryMatched) break;
+                }
+            }
+        }
+        
+        setFieldValue('id_notes', text);
+        filledFields++;
+
+        if (filledFields > 0) {
+            transcriptText.innerHTML = `<span class="success-message">✅ Form auto-filled!</span>`;
+        } else {
+            transcriptText.innerHTML = `<i>Could not extract details. Please try again.</i>`;
+        }
+        
+        recognition.stop();
+    }
+
+    function setFieldValue(id, value) {
+        const field = document.getElementById(id);
+        if (field) field.value = value;
+    }
+
+    function setSelectByText(selectId, textToMatch) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        for (let option of select.options) {
+            if (option.text.toLowerCase().trim() === textToMatch.toLowerCase().trim()) {
+                option.selected = true;
+                select.dispatchEvent(new Event('change', { 'bubbles': true }));
+                return;
+            }
+        }
+    }
+});
+</script>
 {% endblock %}
